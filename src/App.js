@@ -27,6 +27,11 @@ function App() {
 				setState(state => ({
 					ans: math.evaluate(state.input)
 				}));
+				switch (
+					key
+					// TO DO add input evalutor
+				) {
+				}
 			}
 		});
 	}, []);
