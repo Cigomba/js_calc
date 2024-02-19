@@ -73,9 +73,6 @@ function App() {
 				}));
 				break;
 			case "=":
-				// setState(state => ({
-				// 	input: state.input
-				// }));
 				setState(state => ({
 					ans: math.evaluate(state.input.replace(/x/g, "*").replace(/÷/g, "/"))
 				}));
@@ -89,12 +86,6 @@ function App() {
 				break;
 		}
 	}
-
-	const cleanString = str => {
-		// if (str) {
-		return str.replace(/^[0]/g, "");
-		// }
-	};
 
 	return (
 		<div className="App">
