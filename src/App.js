@@ -16,28 +16,20 @@ function App() {
 		const buttons = document.querySelectorAll("button");
 		buttons.forEach(btn => {
 			btn.addEventListener("click", e => {
-				switchIt(e);
+				e.preventDefault();
+				switchIt(e.target.textContent);
 			});
 		});
 
 		// input listener
 		const inputEl = input.current;
 		inputEl.addEventListener("keydown", ({ key }) => {
-			if (key === "Enter") {
-				setState(state => ({
-					ans: math.evaluate(state.input)
-				}));
-				switch (
-					key
-					// TO DO add input evalutor
-				) {
-				}
-			}
+			switchIt(key);
 		});
-	}, []);
+	});
 
 	function switchIt(e) {
-		const x = e.target.textContent;
+		const x = e;
 		switch (x) {
 			case "0":
 			case "1":
@@ -50,44 +42,66 @@ function App() {
 			case "8":
 			case "9":
 			case ".":
-				setState(state => ({
-					input: state.input.replace(/^[0]/g, "") + x
-				}));
+				setState(state =>
+					Object.assign({}, state, {
+						input: state.input.replace(/^[0]/g, "") + x
+					})
+				);
+
 				break;
 			case "+":
 			case "-":
 			case "÷":
-				setState(state => ({
-					input: state.input.replace(/^[0]/g, "") + x
-				}));
+			case "/":
+				setState(state =>
+					Object.assign({}, state, {
+						input: state.input.replace(/^[0]/g, "") + x.replace(/\//g, "÷")
+					})
+				);
 				break;
 			case "x":
-				setState(state => ({
-					input: state.input.replace(/^[0]/g, "") + x
-				}));
+			case "*":
+				setState(state =>
+					Object.assign({}, state, {
+						input: state.input.replace(/^[0]/g, "") + x
+					})
+				);
 				break;
 			case "Delete":
-				setState(state => ({
-					input: state.input.slice(0, state.input.length - 1)
-				}));
+				setState(state =>
+					Object.assign({}, state, {
+						input: state.input.slice(0, state.input.length - 1)
+					})
+				);
 				break;
 			case "AC":
-				setState(state => ({
-					ans: 0,
-					input: "0"
-				}));
+				setState(state => Object.assign({}, state, { ans: 0, input: "0" }));
 				break;
 			case "=":
-				setState(state => ({
-					ans: math.evaluate(state.input.replace(/x/g, "*").replace(/÷/g, "/"))
-				}));
-				setState(state => ({
-					input: state.ans + ""
-				}));
+			case "Enter":
+				let answer;
 
+				try {
+					answer = math.evaluate(state.input.replace(/x/g, "*").replace(/÷/g, "/"));
+					// console.log("answer: " + answer);
+				} catch (error) {
+					console.error(error);
+					answer = "Try again";
+				}
+
+				setState(state => {
+					return Object.assign({}, state, {
+						ans: answer
+					});
+				});
+
+				setState(state =>
+					Object.assign({}, state, {
+						input: state.ans + ""
+					})
+				);
 				break;
 			default:
-				console.log("this code should never run");
 				break;
 		}
 	}

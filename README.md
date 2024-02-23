@@ -5,4 +5,4 @@ You can check out the calculator here : [Js Calculator](https://js-calc.pages.de
 
 ## Acknowledgements
 
-Part of the freeCodeCamp front end development certification. Thank you guys.
+Part of the freeCodeCamp front end development certification. I couldn't have done it without you guys. Thank you.
