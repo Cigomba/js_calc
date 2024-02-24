@@ -7,26 +7,41 @@ function App() {
 
 	const [state, setState] = useState({
 		ans: 0,
-		input: ""
+		input: "",
+		clearOnNext: false
 	});
+
 	const input = useRef();
+	const calculator = useRef(null);
 
 	useEffect(() => {
-		// button listeners
-		const buttons = document.querySelectorAll("button");
-		buttons.forEach(btn => {
-			btn.addEventListener("click", e => {
-				e.preventDefault();
-				switchIt(e.target.textContent);
-			});
-		});
-
 		// input listener
 		const inputEl = input.current;
-		inputEl.addEventListener("keydown", ({ key }) => {
-			switchIt(key);
-		});
-	});
+		if (input.current) {
+			document.addEventListener("keydown", ({ key }) => {
+				input.current.focus();
+				switchIt(key);
+			});
+		}
+
+		// button listeners
+		if (calculator.current) {
+			const buttons = document.querySelectorAll("button");
+			console.log("runs only once");
+			buttons.forEach(btn => {
+				btn.addEventListener("click", e => {
+					switchIt(e.target.textContent);
+				});
+			});
+		}
+	}, []);
+
+	function resolveInput(input) {
+		return input
+			.replace(/^[0]/g, "")
+			.replace(/[.][.]/g, ".")
+			.replace(/\//g, "÷");
+	}
 
 	function switchIt(e) {
 		const x = e;
@@ -42,32 +57,38 @@ function App() {
 			case "8":
 			case "9":
 			case ".":
-				setState(state =>
-					Object.assign({}, state, {
-						input: state.input.replace(/^[0]/g, "") + x
-					})
-				);
+				setState(state => {
+					if (state.clearOnNext) {
+						return Object.assign({}, state, {
+							input: x
+						});
+					}
+					return Object.assign({}, state, {
+						input: resolveInput(state.input.includes(".") && x === "." ? state.input : state.input + x)
+					});
+				});
 
 				break;
 			case "+":
 			case "-":
 			case "÷":
 			case "/":
-				setState(state =>
-					Object.assign({}, state, {
-						input: state.input.replace(/^[0]/g, "") + x.replace(/\//g, "÷")
-					})
-				);
-				break;
 			case "x":
 			case "*":
-				setState(state =>
-					Object.assign({}, state, {
-						input: state.input.replace(/^[0]/g, "") + x
-					})
-				);
+				setState(state => {
+					let y = state.input[state.input.length - 1];
+					if (state.input.length > 0 && (y === "*" || y === "+" || y === "-" || y === "/" || y === "÷")) {
+						return Object.assign({}, state, {
+							input: state.input.slice(0, state.input.length - 1) + x
+						});
+					}
+					return Object.assign({}, state, {
+						input: state.input + x
+					});
+				});
 				break;
 			case "Delete":
+			case "Backspace":
 				setState(state =>
 					Object.assign({}, state, {
 						input: state.input.slice(0, state.input.length - 1)
@@ -75,29 +96,24 @@ function App() {
 				);
 				break;
 			case "AC":
-				setState(state => Object.assign({}, state, { ans: 0, input: "0" }));
+				setState(state => Object.assign({}, state, { ans: 0, input: "0", clearOnNext: false }));
 				break;
 			case "=":
 			case "Enter":
-				let answer;
-
 				try {
-					answer = math.evaluate(state.input.replace(/x/g, "*").replace(/÷/g, "/"));
-					// console.log("answer: " + answer);
+					setState(state => {
+						return Object.assign({}, state, {
+							ans: math.evaluate(state.input.replace(/x/g, "*").replace(/÷/g, "/"))
+							// clearOnNext: true
+						});
+					});
 				} catch (error) {
 					console.error(error);
-					answer = "Try again";
 				}
-
-				setState(state => {
-					return Object.assign({}, state, {
-						ans: answer
-					});
-				});
-
 				setState(state =>
 					Object.assign({}, state, {
 						input: state.ans + ""
+						// clearOnNext: true
 					})
 				);
 				break;
@@ -109,8 +125,9 @@ function App() {
 	return (
 		<div className="App">
 			<h1>Javascript Calculator</h1>
-			<div className="Calculator">
-				<input id="display" style={{ textAlign: "right" }} ref={input} value={state.input} onChange={e => setState({ input: e.target.value })} />
+			<div className="Calculator" ref={calculator}>
+				<input id="display" style={{ textAlign: "right" }} onChange={() => {}} ref={input} value={state.input} />
+				<span id="displayInput">{state.displayInput}</span>
 				<button id="zero">0</button>
 				<button id="one">1</button>
 				<button id="two">2</button>
