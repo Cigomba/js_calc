@@ -8,6 +8,7 @@ function App() {
 	const [state, setState] = useState({
 		ans: 0,
 		input: "",
+		output: "0",
 		clearOnNext: false
 	});
 
@@ -60,11 +61,12 @@ function App() {
 				setState(state => {
 					if (state.clearOnNext) {
 						return Object.assign({}, state, {
-							input: x
+							input: x, output: state.output + x, clearOnNext: false
 						});
 					}
 					return Object.assign({}, state, {
-						input: resolveInput(state.input.includes(".") && x === "." ? state.input : state.input + x)
+						input: x, output: resolveInput(state.output.includes(".") && x === "." ? state.output : state.output + x),
+						clearOnNext: false
 					});
 				});
 
@@ -76,14 +78,30 @@ function App() {
 			case "x":
 			case "*":
 				setState(state => {
-					let y = state.input[state.input.length - 1];
-					if (state.input.length > 0 && (y === "*" || y === "+" || y === "-" || y === "/" || y === "÷")) {
+					if (state.output === "") {
+						return state;
+					}
+
+					if (state.clearOnNext) {
 						return Object.assign({}, state, {
-							input: state.input.slice(0, state.input.length - 1) + x
+							input: x, output: state.ans + x, clearOnNext: false
+						});
+					}
+
+					let y = state.output[state.output.length - 1];
+
+					if (state.output.length > 0 && (y === "x" || y === "*" || y === "+" || y === '-' || y === "/" || y === "÷")) {
+						if (x === '-') {
+							return Object.assign({}, state, {
+								input: x, output: state.output + x
+							});
+						}
+						return Object.assign({}, state, {
+							input: x, output: state.output.slice(0, state.output.length - 1) + x
 						});
 					}
 					return Object.assign({}, state, {
-						input: state.input + x
+						input: x, output: state.output + x
 					});
 				});
 				break;
@@ -91,20 +109,28 @@ function App() {
 			case "Backspace":
 				setState(state =>
 					Object.assign({}, state, {
-						input: state.input.slice(0, state.input.length - 1)
+						input: "", output: state.output.slice(0, state.output.length - 1)
 					})
 				);
 				break;
 			case "AC":
-				setState(state => Object.assign({}, state, { ans: 0, input: "0", clearOnNext: false }));
+				setState(state => {
+
+					return Object.assign({}, state, { ans: 0, input: "0", output: "", clearOnNext: false });
+				});
+
 				break;
 			case "=":
 			case "Enter":
 				try {
 					setState(state => {
+						let y = state.output[state.output.length - 1];
+						if (state.output.length > 0 && (y === "x" || y === "*" || y === "+" || y === '-' || y === "/" || y === "÷")) {
+							return state;
+						}
 						return Object.assign({}, state, {
-							ans: math.evaluate(state.input.replace(/x/g, "*").replace(/÷/g, "/"))
-							// clearOnNext: true
+							ans: math.evaluate(state.output.replace(/x/g, "*").replace(/÷/g, "/")),
+							clearOnNext: true
 						});
 					});
 				} catch (error) {
@@ -112,8 +138,9 @@ function App() {
 				}
 				setState(state =>
 					Object.assign({}, state, {
-						input: state.ans + ""
-						// clearOnNext: true
+						input: state.ans + "",
+						output: state.output + " = " + state.ans,
+						clearOnNext: true
 					})
 				);
 				break;
@@ -126,8 +153,10 @@ function App() {
 		<div className="App">
 			<h1>Javascript Calculator</h1>
 			<div className="Calculator" ref={calculator}>
-				<input id="display" style={{ textAlign: "right" }} onChange={() => {}} ref={input} value={state.input} />
-				<span id="displayInput">{state.displayInput}</span>
+				<div id="input">
+					<input id="display" style={{ textAlign: "right" }} onChange={() => { }} ref={input} value={state.input} />
+					<span id="output">{state.output}</span>
+				</div>
 				<button id="zero">0</button>
 				<button id="one">1</button>
 				<button id="two">2</button>
